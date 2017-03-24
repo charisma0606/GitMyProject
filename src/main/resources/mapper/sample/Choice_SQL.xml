@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="choice">
+
+
+	<select id="choiceSelectList" parameterType="hashmap" resultType="hashmap">
+		
+		<include refid="common.pagingPre"/>
+			<![CDATA[ 
+				SELECT
+					ROW_NUMBER() OVER (ORDER BY IDX DESC) RNUM
+					,IDX
+					,TITLE
+					,CONTENT_1
+					,CONTENT_2
+					,HIT_CNT
+					,TO_CHAR(CREA_DTM, 'YYYY.MM.DD') AS CREA_DTM
+				FROM
+					TB_CHOICE
+				WHERE
+					DEL_GB = 'N'
+			]]>
+		<include refid="common.pagingPost"/>
+	
+	</select>
+	
+	<insert id="insertChoice" parameterType="hashmap" useGeneratedKeys="true" keyProperty="IDX">
+		<selectKey keyProperty="IDX" resultType="String" order="BEFORE">
+			SELECT SEQ_TB_CHOICE_IDX.NEXTVAL FROM DUAL
+		</selectKey>
+		<![CDATA[
+			INSERT INTO TB_CHOICE
+			(
+				IDX
+				,TITLE
+				,CONTENT_1
+				,CONTENT_2
+				,HIT_CNT
+				,DEL_GB
+				,CREA_DTM
+				,CREA_ID
+			)
+			VALUES
+			(
+				#{IDX}
+				,#{TITLE}
+				,#{CONTENT_1}
+				,#{CONTENT_2}
+				,0
+				,'N'
+				,SYSDATE
+				,'Admin'
+			)	
+		
+		]]>
+	</insert>
+	
+	<insert id="insertFile" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO TB_CHOICE_IMG
+			(
+				IDX
+				,BOARD_IDX
+				,ORIGINAL_FILE_NAME
+				,STORED_FILE_NAME
+				,FILE_SIZE
+				,CREA_ID
+			)
+			VALUES	
+			(
+				SEQ_TB_FILE_IDX.NEXTVAL
+				,#{BOARD_IDX}
+				,#{ORIGINAL_FILE_NAME}
+				,#{STORED_FILE_NAME}
+				,#{FILE_SIZE}
+				,'Admin'
+			)
+		]]>
+	</insert>
+	
+	<select id="selectDetailView" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				IDX
+				,TITLE
+				,CONTENT_1
+				,CONTENT_2
+				,HIT_CNT
+				,CREA_DTM
+				,CREA_ID
+			FROM
+				TB_CHOICE
+			WHERE
+				IDX = #{IDX}
+		
+		]]>
+	</select>
+	
+	<update id="updateHitCnt" parameterType="hashmap">
+		<![CDATA[
+			UPDATE TB_CHOICE
+			SET
+				 HIT_CNT = NVL(HIT_CNT, 0) +1
+			WHERE
+				IDX = #{IDX}		
+		]]>
+	</update>
+	
+	<select id="selectImg" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				IDX
+				,ORIGINAL_FILE_NAME
+				,ROUND(FILE_SIZE/1024,1) AS FILE_SIZE
+				,STORED_FILE_NAME
+			FROM
+				TB_CHOICE_IMG
+			WHERE
+				BOARD_IDX = #{IDX}
+				AND DEL_GB = 'N'
+		
+		]]>
+	</select>
+	
+	<select id="selectTopHitCnt" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+			  IDX
+			FROM
+			  TB_CHOICE
+			WHERE
+			  HIT_CNT = (SELECT MAX(HIT_CNT) FROM TB_CHOICE)
+		]]>
+	</select>
+	
+	<insert id="insertReply" parameterType="hashmap" useGeneratedKeys="true" keyProperty="IDX">
+		<selectKey keyProperty="IDX" resultType="String" order="BEFORE">
+ 			SELECT SEQ_CHOICE_REPLY_IDX.NEXTVAL FROM DUAL
+ 		</selectKey>
+		<![CDATA[
+			INSERT INTO TB_CHOICE_REPLY 
+			(
+				IDX
+				,BOARD_IDX
+				,CONTENT
+				,LIKE_IDX
+				,HATE_IDX
+				,DEL_GB
+				,CREA_DTM
+				,CREA_ID
+			)
+			VALUES
+			(
+				#{IDX}
+				,#{BOARD_IDX}
+				,#{CONTENT}
+				,0
+				,0
+				,'N'
+				,SYSDATE
+				,#{CREA_ID}
+			)	
+		]]>
+	</insert>
+	
+	<select id="selectReply" parameterType="hashmap" resultType="hashmap">
+			SELECT 
+				IDX
+				,BOARD_IDX
+				,CONTENT
+				,LIKE_IDX
+				,HATE_IDX
+				,DEL_GB
+				,TO_CHAR(CREA_DTM, 'YYYY-MM-DD HH:MM') AS CREA_DTM
+				,CREA_ID
+			FROM
+				TB_CHOICE_REPLY
+			<where>
+				BOARD_IDX = #{BOARD_IDX}
+			AND	
+				DEL_GB = 'N'	
+			ORDER BY 
+				<choose>
+		            <when test="orderBy == 'LIKE_IDX'">
+		                LIKE_IDX 
+		            </when>
+		            <when test="orderBy == 'IDX'">
+		                IDX	
+		            </when>
+	        	</choose>
+			DESC	
+			</where>
+	</select>
+	
+	<update id="addLike" parameterType="hashmap">
+			UPDATE TB_CHOICE_REPLY
+		 	<set>
+		      <if test="LikeGb == 'LIKE_R'">LIKE_IDX = NVL(LIKE_IDX, 0) +1</if>
+		      <if test="LikeGb == 'HATE_R'">HATE_IDX = NVL(HATE_IDX, 0) +1</if>
+		    </set>
+			WHERE
+				IDX = #{IDX}	
+	</update>
+	
+	<update id="addHate" parameterType="hashmap">
+		<![CDATA[
+			UPDATE TB_CHOICE_REPLY
+			SET
+				HATE_IDX = NVL(HATE_IDX, 0) +1
+			WHERE
+				IDX = #{IDX}
+		]]>
+	</update>
+	
+	
+	<insert id="insertVote" parameterType="hashmap">
+			INSERT INTO TB_CHOICE_CNT
+			(
+				IDX
+				,IDX_BOARD
+				,TITLE
+				,COUNT_1
+				,COUNT_2
+				,SEX_GB
+				,AGE_GB
+				,CREA_DTM
+				,CREA_ID
+				
+			)
+			VALUES
+			(
+				SEQ_TB_CHOICE_CNT_IDX.NEXTVAL
+				,#{BOARD_IDX}
+				,#{TITLE}
+				<if test="voteType == 'choice_1'">,1,0</if>
+		      	<if test="voteType == 'choice_2'">,0,1</if>
+				,#{SEX_GB}
+				,#{AGE_GB}
+				,SYSDATE
+				,#{CREA_ID}
+			)
+	</insert>
+	
+	<select id="creaID_Chk" parameterType="hashmap" resultType="Integer">
+		<![CDATA[
+			SELECT 
+				COUNT(CREA_ID)
+			FROM 
+				TB_CHOICE_CNT
+			WHERE 
+				IDX_BOARD = #{BOARD_IDX}
+			AND
+				CREA_ID = #{CREA_ID}
+		]]>
+	</select>
+	
+	<select id="voteCount" parameterType="hashmap" resultType="hashmap">
+		
+		<![CDATA[
+		
+			SELECT COUNT(IDX) AS VOTE_CNT FROM TB_CHOICE_CNT WHERE IDX_BOARD = #{BOARD_IDX}
+				UNION ALL
+			SELECT COUNT(COUNT_1) FROM TB_CHOICE_CNT WHERE IDX_BOARD = #{BOARD_IDX} AND COUNT_1 = 1
+				UNION ALL
+			SELECT COUNT(COUNT_2) FROM TB_CHOICE_CNT WHERE IDX_BOARD = #{BOARD_IDX} AND COUNT_2 = 1
+		
+		]]>
+		
+		
+	</select>
+	
+	
+	<select id="sex_chart" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				COUNT(SEX_GB) AS SEX_GB FROM TB_CHOICE_CNT
+			WHERE 
+				IDX_BOARD = #{BOARD_IDX} AND SEX_GB = 'M'
+			UNION ALL
+			SELECT 
+				COUNT(SEX_GB) FROM TB_CHOICE_CNT
+			WHERE 
+				IDX_BOARD = #{BOARD_IDX} AND SEX_GB = 'G'
+		]]>
+	</select>
+	
+	
+	<select id="age_chart_1" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				COUNT(CASE WHEN AGE_GB < 10 THEN 1 END) "age_1",
+				COUNT(CASE WHEN AGE_GB BETWEEN 10 AND 19 THEN 1 END) "age_10",
+				COUNT(CASE WHEN AGE_GB BETWEEN 20 AND 29 THEN 1 END) "age_20",
+				COUNT(CASE WHEN AGE_GB BETWEEN 30 AND 39 THEN 1 END) "age_30",
+				COUNT(CASE WHEN AGE_GB BETWEEN 40 AND 49 THEN 1 END) "age_40",
+				COUNT(CASE WHEN AGE_GB BETWEEN 50 AND 59 THEN 1 END) "age_50",
+				COUNT(CASE WHEN AGE_GB BETWEEN 60 AND 69 THEN 1 END) "age_60",
+				COUNT(CASE WHEN AGE_GB >= 70 THEN 1 END) "age_70"
+			FROM 
+				TB_CHOICE_CNT 
+			WHERE 
+				IDX_BOARD = #{BOARD_IDX} AND COUNT_1 = 1	
+		]]>
+	</select>
+	
+	<select id="age_chart_2" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				COUNT(CASE WHEN AGE_GB < 10 THEN 1 END) "age_1",
+				COUNT(CASE WHEN AGE_GB BETWEEN 10 AND 19 THEN 1 END) "age_10",
+				COUNT(CASE WHEN AGE_GB BETWEEN 20 AND 29 THEN 1 END) "age_20",
+				COUNT(CASE WHEN AGE_GB BETWEEN 30 AND 39 THEN 1 END) "age_30",
+				COUNT(CASE WHEN AGE_GB BETWEEN 40 AND 49 THEN 1 END) "age_40",
+				COUNT(CASE WHEN AGE_GB BETWEEN 50 AND 59 THEN 1 END) "age_50",
+				COUNT(CASE WHEN AGE_GB BETWEEN 60 AND 69 THEN 1 END) "age_60",
+				COUNT(CASE WHEN AGE_GB >= 70 THEN 1 END) "age_70"
+			FROM 
+				TB_CHOICE_CNT 
+			WHERE 
+				IDX_BOARD = #{BOARD_IDX} AND COUNT_2 = 1		
+		]]>
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="lotto">
+
+	<insert id="insertLotto" parameterType="hashmap" useGeneratedKeys="true" keyProperty="IDX">
+		<selectKey keyProperty="IDX" resultType="String" order="BEFORE">
+			SELECT SEQ_TB_LOTTOLIST_IDX.NEXTVAL FROM DUAL
+		</selectKey>
+		<![CDATA[
+			
+			INSERT INTO TB_LOTTOLIST
+			(
+				IDX
+				,NUM
+				,NUM_1
+				,NUM_2
+				,NUM_3
+				,NUM_4
+				,NUM_5
+				,NUM_6
+				,DEL_GB
+				,CREA_DTM
+			)
+			VALUES
+			(
+				#{IDX}
+				,#{NUM}
+				,#{NUM_1}
+				,#{NUM_2}
+				,#{NUM_3}
+				,#{NUM_4}
+				,#{NUM_5}
+				,#{NUM_6}
+				,'N'
+				,SYSDATE
+			)
+			
+		]]>
+	
+	</insert>
+	
+	
+	<select id="selectLottoList" parameterType="hashmap" resultType="hashmap">
+		
+		<![CDATA[
+			SELECT
+				IDX
+				,NUM
+				,NUM_1
+				,NUM_2
+				,NUM_3
+				,NUM_4
+				,NUM_5
+				,NUM_6
+				,TO_CHAR(CREA_DTM, 'YYYY.MM.DD') as CREA_DTM
+			FROM
+				TB_LOTTOLIST
+			WHERE
+				DEL_GB = 'N'
+			ORDER BY CREA_DTM DESC
+		]]>		
+		
+	</select>
+	
+	<update id="updateNum" parameterType="hashmap" >
+		
+		<![CDATA[
+					
+			UPDATE 
+				TB_LOTTOLIST
+			SET
+				DEL_GB = 'Y'
+			WHERE
+				IDX = #{IDX}
+
+		]]>
+	
+	</update>
+	
+	
+
+
+</mapper>
+

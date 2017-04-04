@@ -25,6 +25,10 @@
             	<a href="#this" class="btn" id="Choice" >3. Choice VS Chioce</a>
             </tr>
             </br></br>
+            <tr>
+            	<a href="#this" class="btn" id="calculate" >4. 금융 계산기</a>
+            </tr>
+            
         </thead>
     </table>
     <br/>
@@ -71,9 +75,9 @@
 				fn_openChoice();
 			});
 			
-			$("#wenovel").on("click", function(e){
+			$("#calculate").on("click", function(e){
 				e.preventDefault();
-				fn_wenovel();
+				fn_calculate();
 			});
 			
 			
@@ -121,10 +125,10 @@
 			comSubmit.submit();
 		}
 		
-		// wenovel
-		function fn_wenovel(){
+		// 금융 계산기
+		function fn_calculate(){
 			var comSubmit = new ComSubmit();
-			comSubmit.setUrl("<c:url value='/sample/wenovel.do' />");
+			comSubmit.setUrl("<c:url value='/sample/calculate.do' />");
 			comSubmit.submit();
 		}
 		

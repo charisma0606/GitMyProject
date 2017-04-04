@@ -47,7 +47,7 @@
 						
     	<div class="ch_2">
     	<br/>
-    		<img src="../images/${IMG_2.STORED_FILE_NAME}" height="250" width="300"/> </br>
+    		<img src="../images/${IMG_2.STORED_FILE_NAME}" height="250" width="300"/> <br/>
     		<font size="5" color="#2F9D27" face="Impact"></font>
     	</div>
     	
